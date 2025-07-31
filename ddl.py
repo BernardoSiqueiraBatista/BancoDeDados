@@ -33,12 +33,7 @@ cursor = conn.cursor()
 
 # CLUBE (ID, Nome, Data_Fundacao)
 # cursor.execute("""
-# CREAPARTIDA (ID, Data, Placar)
-# A coluna Placar foi definida como texto por uma questão de semântica. No placar, armazenamos um inteiro
-# que representa o total de gols do time mandante e outro inteiro para o total de gols do time visitante,
-# mas precisamos de um separador para entender qual time está sendo referenciado por cada inteiro, e ele é 
-# um caracter. Logo, iremos armazenar essa expressão 'int x int' como texto.
-# cursor.exeTE TABLE Clube (
+# CREATE TABLE Clube (
 #     id_clube INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 #     Nome TEXT NOT NULL,
 #     Data_fundação DATE NOT NULL
