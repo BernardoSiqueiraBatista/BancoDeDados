@@ -1,4 +1,4 @@
-select geral
+select geral.txt
 tabelas
 testes.py
 futebol.db

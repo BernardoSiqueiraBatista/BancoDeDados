@@ -125,7 +125,7 @@ cursor.execute("""
 cursor.execute("""
     CREATE TABLE Jogador (
         cpf_jogador VARCHAR(11) PRIMARY KEY,
-        posicao INTEGER NOT NULL,
+        posicao TEXT NOT NULL,
         id_clube INTEGER NOT NULL,
         
         CONSTRAINT fk_pessoa_jogador FOREIGN KEY (cpf_jogador) REFERENCES Pessoa(cpf),
@@ -156,11 +156,12 @@ cursor.execute("""
     CREATE TABLE Participa (
         id_campeonato INTEGER,
         id_clube INTEGER,
+        data DATE,
         colocacao INTEGER,
 
         CONSTRAINT fk_campeonato_participa FOREIGN KEY (id_campeonato) REFERENCES Campeonato (id_campeonato),
         CONSTRAINT fk_clube_participa FOREIGN KEY (id_clube) REFERENCES Clube (id_clube),
-        CONSTRAINT pk_participa PRIMARY KEY (id_campeonato, id_clube, colocacao)
+        CONSTRAINT pk_participa PRIMARY KEY (id_campeonato, id_clube, data)
     );
 """)
 
@@ -175,12 +176,12 @@ cursor.execute("""
         id_campeonato INTEGER,
         id_clube INTEGER,
         id_patrocinador INTEGER,
-        colocacao INTEGER,
+        data DATE,
         
-        CONSTRAINT fk_participa FOREIGN KEY (id_campeonato, id_clube, colocacao) REFERENCES Participa (id_campeonato, id_clube, colocacao),
+        CONSTRAINT fk_participa FOREIGN KEY (id_campeonato, id_clube, data) REFERENCES Participa (id_campeonato, id_clube, data),
         CONSTRAINT fk_patrocinador_patrocinado FOREIGN KEY (id_patrocinador) REFERENCES Patrocinador (id_patrocinador),
 
-        CONSTRAINT pk_patrocinado PRIMARY KEY (id_campeonato, id_clube, id_patrocinador, colocacao)
+        CONSTRAINT pk_patrocinado PRIMARY KEY (id_campeonato, id_clube, id_patrocinador, data)
     );
 """)
 
