@@ -90,8 +90,70 @@ cursor.execute("""
 print('\nOperação conjunto:')
 print(cursor.fetchall())
 
+    # SEMI-JOIN
+    # Exibe os CPFs dos presidentes cujos clubes foram fundados antes de 1970
+    # -------------------------------------------------------------
+cursor.execute("""
+        SELECT DISTINCT pr.cpf_presidente
+        FROM   Presidente pr
+        WHERE  EXISTS (
+               SELECT 1
+               FROM   Clube c
+               WHERE  c.id_clube       = pr.id_clube
+                 AND  c.data_fundacao < '1970-01-01'
+        );
+    """)
+print("\nOperação de Semi-Join:")
+print(cursor.fetchall())
+
+    # -------------------------------------------------------------
+    # ANTI-JOIN
+    # Exibe os CPFs dos presidentes cujos clubes foram fundados em 1950 ou depois
+    # (ou seja, não existe clube vinculado fundado antes de 1950)
+    # -------------------------------------------------------------
+cursor.execute("""
+        SELECT DISTINCT pr.cpf_presidente
+        FROM   Presidente pr
+        WHERE  NOT EXISTS (
+               SELECT 1
+               FROM   Clube c
+               WHERE  c.id_clube       = pr.id_clube
+                 AND  c.data_fundacao < '1950-01-01'
+        );
+    """)
+print("\nOperação de Anti-Join:")
+print(cursor.fetchall())
+
+    # -------------------------------------------------------------
+    # SUBCONSULTA-TABELA (derived table)
+    # Exibe o CPF e o nome do clube dos jogadores que marcaram
+    # três ou mais gols em uma única partida
+    # -------------------------------------------------------------
+cursor.execute("""
+        SELECT t.cpf,
+               c.nome AS clube
+        FROM (
+               SELECT g.cpf,
+                      g.id_clube,
+                      g.id_partida,
+                      COUNT(*) AS qtd_gols
+               FROM   Gol g
+               GROUP  BY g.cpf, g.id_clube, g.id_partida
+               HAVING COUNT(*) >= 3
+             ) AS t
+        JOIN Clube c ON c.id_clube = t.id_clube;
+    """)
+print("\nOperação de Subconsulta-Tabela:")
+print(cursor.fetchall())
 
 
+
+
+
+
+
+
+ 
 
 resultados = cursor.fetchall()
 
