@@ -54,7 +54,7 @@ cursor.execute("""
 cursor.execute("""
     CREATE TABLE Sumula (
         id_partida INTEGER NOT NULL PRIMARY KEY,
-        cartao TEXT,
+        quantidade_cartoes INTEGER,
         substituicoes INTEGER,
         
         CONSTRAINT fk_partida FOREIGN KEY (id_partida) REFERENCES Partida (id_partida)
@@ -83,10 +83,12 @@ cursor.execute("""
     CREATE TABLE Presidente (
         cpf_presidente VARCHAR(11),
         id_clube INTEGER NOT NULL UNIQUE,
-        data_inicio DATE NOT NULL,
+        data_inicio_mandato DATE NOT NULL,
+        data_fim_mandato DATE NOT NULL,
         
-        PRIMARY KEY (cpf_presidente, id_clube),
-        CONSTRAINT FK_pessoa FOREIGN KEY (cpf_presidente) REFERENCES Pessoa(cpf)
+        PRIMARY KEY (cpf_presidente),
+        FOREIGN KEY (id_clube) REFERENCES Clube (id_clube),  
+        FOREIGN KEY (cpf_presidente) REFERENCES Pessoa(cpf)
     );
 """)
 
@@ -149,7 +151,7 @@ cursor.execute("""
 
 
 
-# PARTICIPA (ID_Camp, ID_Clube, Colocação)
+# PARTICIPA (ID_Campeonato, ID_Clube, Colocação)
 # 	ID_Camp -> CAMPEONATO (ID)
 # 	ID_Clube -> CLUBE (ID)
 cursor.execute("""
