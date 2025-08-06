@@ -22,7 +22,6 @@ cursor.executemany("""
 
 
 
-
 # Inserir Clubes (id_clube, nome, data_fundacao)
 clubes = [
     (1, 'Flamengo', '1895-11-17'),
@@ -35,7 +34,6 @@ cursor.executemany("""
     INSERT INTO Clube (id_clube, nome, data_fundacao)
     VALUES (?, ?, ?);
 """, clubes)
-
 
 
 
@@ -55,6 +53,25 @@ cursor.executemany("""
 """, jogadores)
 
 
+# Inserir Clubes_anteriores (CPF, Clube_anterior)
+Clubes_anteriores = [
+    ('12345678901', 'Sport'),
+    ('12345678901', 'Atlético-MG'),
+    ('12345678901', 'Botafogo'),  
+    ('23456789012', 'Nautico'),
+    ('23456789012', 'Avaí'),
+    ('23456789012', 'Vitória'),
+    ('34567890123', 'Santa Cruz'), 
+    ('34567890123', 'Sport'), 
+    ('45678901234', 'Palmeiras'), 
+    ('56789012345', 'CSA'),
+    ('67890123456', 'CRB'),
+]
+
+cursor.executemany("""
+    INSERT INTO Clubes_anteriores (cpf_jogador, Clube_anterior)
+    VALUES (?, ?);
+""", Clubes_anteriores)
 
 
 # Inserir técnicos (cpf_tecnico, licenca, anos_experiencia)

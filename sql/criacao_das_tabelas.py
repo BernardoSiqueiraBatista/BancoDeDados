@@ -98,10 +98,10 @@ cursor.execute("""
 #     CPF -> PESSOA (CPF)
 cursor.execute("""
     CREATE TABLE Arbitro (
-        cpf_Arbitro VARCHAR(11) PRIMARY KEY,
+        cpf_arbitro VARCHAR(11) PRIMARY KEY,
         cart_fifa BOOL NOT NULL,
 
-        CONSTRAINT fk_pessoa_arbitro FOREIGN KEY (cpf_Arbitro) REFERENCES Pessoa(cpf)
+        CONSTRAINT fk_pessoa_arbitro FOREIGN KEY (cpf_arbitro) REFERENCES Pessoa(cpf)
     );
 """)
 
