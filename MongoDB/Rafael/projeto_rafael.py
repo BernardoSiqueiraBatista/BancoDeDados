@@ -43,19 +43,22 @@ def query_scenario_1():
             print(f"\nJogadores que fizeram gol pelo {nome_clube}:")
             for jogador in jogadores:
                 print(f"- {jogador['nome']}")
+        else:
+            print(f"Nenhum gol encontrado para o {nome_clube} neste formato de dados.")
 
 def insert_scenario_2(gols_master_list):
     meu_banco['gol'].delete_many({})
     print("\nExecutando Inserção - Cenário 2 (Embutido Simples)...")
     gols = []
     for gol in gols_master_list:
+        posicao_jogador = gol["autor"].get("posicao", "Não especificada")
         gols.append({
             "partida_id": gol["partida_id"],
             "clube_id": gol["clube_id"],
             "jogador": {
                 "cpf": gol["autor"]["_id"],
                 "nome": gol["autor"]["nome"],
-                "posicao": gol["autor"]["posicao"]
+                "posicao": posicao_jogador
             },
             "minuto_do_gol": gol["minuto"]
         })
@@ -64,11 +67,15 @@ def insert_scenario_2(gols_master_list):
 
 def query_scenario_2():
     nome_clube = input("Nome do Clube: ").strip()
-    jogadores = meu_banco['gol'].find({"jogador.clube.nome": nome_clube}, {"jogador.nome": 1, "_id": 0})
-    
-    print(f"Jogadores que marcaram gol para o {nome_clube}:")
-    for jogador in jogadores:
-        print(f"- {jogador['jogador']['nome']}")
+    clube_doc = meu_banco['clube'].find_one({"nome": nome_clube})
+
+    if clube_doc:
+        clube_id = clube_doc['_id']
+        jogadores = meu_banco['gol'].find({"clube_id": clube_id, "jogador": {"$exists": True}}, {"jogador.nome": 1, "_id": 0})
+        
+        print(f"\nJogadores que marcaram gol para o {nome_clube}:")
+        for jogador in jogadores:
+            print(f"- {jogador['jogador']['nome']}")
 
 def insert_scenario_3(gols_master_list):
     meu_banco['gol'].delete_many({})
