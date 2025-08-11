@@ -4,138 +4,157 @@ from datetime import datetime
 
 pp = pprint.PrettyPrinter(indent=2)
 
-def limpa_banco(db):
-  db.pessoa.delete_many({})
-  db.arbitro.delete_many({})
-  db.partida.delete_many({})
+def limpar_colecoes(db):
+  """
+  Apaga a coleção 'clube' para garantir um teste limpo e isolado.
+  """
+  db.clube.delete_many({})
 
 
-def cenario_1_referencia(db):
-  """Emula a estrutura relacional: Partida -> Arbitro -> Pessoa."""
-  print("Executando: Cenário 1 (Referência)")
+def cenario_1_referencia_unica(db):
+  """
+  Cenário 1: Referência Simples (Adaptado para 1-para-1).
+  Caso de uso: Um clube tem um "Principal Rival".
+  O documento do clube armazena o ID do seu maior rival.
+  """
+  print("\nExecutando: Cenário 1 (Referência de 'Principal Rival')")
 
-  #Inserção de dados
-  db.pessoa.insert_one({
-    "_id": "111", 
-    "nome": "Raphael Claus",
-    "nascimento": datetime(1979, 8, 6)
-  })
-  db.arbitro.insert_one({
-    "_id": "111", #Mesmo ID de pessoa
-    "cartao_fifa": True,
-    "pessoa_ref": "111" #FK para pessoa
-  })
-  db.partida.insert_one({
-    "descricao": "Final do Campeonato",
-    "arbitro_ref": "111" #FK para arbitro
-  })
+  #Inserção dos clubes
+  db.clube.insert_many([
+    {"_id": "SPT", "nome": "Sport Club do Recife", "data_fundacao": datetime(1905, 5, 13)},
+    {"_id": "NAU", "nome": "Clube Náutico Capibaribe", "data_fundacao": datetime(1901, 4, 7)}
+  ])
+  #Adiciona a referência de rival no Sport
+  db.clube.update_one(
+    {"_id": "SPT"}, 
+    {"$set": {"principal_rival_ref": "NAU"}}
+  )
 
-  partida = db.partida.find_one({"descricao": "Final do Campeonato"})
-  arbitro = db.arbitro.find_one({"_id": partida['arbitro_ref']})
-  pessoa_arbitro = db.pessoa.find_one({"_id": arbitro['pessoa_ref']})
+  #Consulta: Qual o nome do principal rival do Sport?
+  sport = db.clube.find_one({"_id": "SPT"})
+  rival = db.clube.find_one({"_id": sport['principal_rival_ref']})
 
-  pp.pprint(pessoa_arbitro)
+  pp.pprint(rival)
 
-def cenario_2_embutido(db):
-  """Modelo NoSQL: Partida com os dados do árbitro embutidos."""
-  print("Executando: Cenário 2 (Embutido)")
 
-  #1 Inserção de dados
-  db.partida.insert_one({
-    "descricao": "Final do Campeonato",
-    "arbitro": {
-      "cpf": "111",
-      "nome": "Raphael Claus",
-      "cartao_fifa": True
+def cenario_2_embutido_unico(db):
+  """
+  Cenário 2: Documento Embutido (Adaptado para 1-para-1).
+  Caso de uso: Um clube tem um "Principal Rival", e seus dados básicos
+  são embutidos para otimizar a leitura.
+  """
+  print("\nExecutando: Cenário 2 (Embutindo 'Principal Rival')")
+
+  #Inserção do clube com o rival embutido
+  db.clube.insert_one({
+    "_id": "SPT",
+    "nome": "Sport Club do Recife",
+    "data_fundacao": datetime(1905, 5, 13),
+    "principal_rival": {
+      "id_clube": "NAU",
+      "nome": "Clube Náutico Capibaribe"
     }
   })
 
-  #2 Consulta direta
-  partida = db.partida.find_one({"descricao": "Final do Campeonato"})
+  #Consulta: Qual o nome do principal rival do Sport?
+  sport = db.clube.find_one({"_id": "SPT"})
 
-  pp.pprint(partida['arbitro'])
+  pp.pprint(sport['principal_rival'])
+
 
 def cenario_3_array_referencias(db):
-  """Emula a estrutura relacional: Partida -> N Arbitros."""
-  print("Executando: Cenário 3 (Array de Referências)")
+  """
+  Cenário 3: Array de Referências (N-para-N).
+  O modelo mais fiel ao relacional para N:N, onde um clube
+  armazena uma lista de IDs de seus rivais.
+  """
+  print("\nExecutando: Cenário 3 (Array de Referências de Rivais)")
 
-  #1 Insere as pessoas/árbitros
-  db.pessoa.insert_many([
-    {"_id": "111", "nome": "Raphael Claus"},
-    {"_id": "222", "nome": "Wilton Pereira Sampaio"},
-    {"_id": "333", "nome": "Anderson Daronco"}
+  #Inserção dos clubes
+  db.clube.insert_many([
+    {"_id": "SPT", "nome": "Sport Club do Recife"},
+    {"_id": "NAU", "nome": "Clube Náutico Capibaribe"},
+    {"_id": "STC", "nome": "Santa Cruz Futebol Clube"}
   ])
+  #Adiciona a lista de referências de rivais no Sport
+  db.clube.update_one(
+    {"_id": "SPT"},
+    {"$set": {"rivais_refs": ["NAU", "STC"]}}
+  )
 
-  #2 Insere a partida com a lista de IDs
-  db.partida.insert_one({
-    "descricao": "Jogo Noturno",
-    "equipe_arbitragem_refs": ["111", "222", "333"]
-  })
+  #Consulta: Quais os nomes dos rivais do Sport?
+  sport = db.clube.find_one({"_id": "SPT"})
+  ids_rivais = sport['rivais_refs']
 
-  #3 Consulta com o operador $in
-  partida = db.partida.find_one({"descricao": "Jogo Noturno"})
-  ids_arbitros = partida['equipe_arbitragem_refs']
+  rivais = list(db.clube.find({"_id": {"$in": ids_rivais}}))
 
-  #find() retorna um cursor, então precisamos iterar
-  arbitros_encontrados = list(db.pessoa.find({"_id": {"$in": ids_arbitros}}))
+  pp.pprint(rivais)
 
-  pp.pprint(arbitros_encontrados)
 
 def cenario_4_array_embutido(db):
-  """Modelo NoSQL: Partida com a equipe de arbitragem embutida."""
-  print("Executando: Cenário 4 (Array Embutido)")
+  """
+  Cenário 4: Array de Documentos Embutidos (N-para-N).
+  Abordagem NoSQL clássica para N:N, otimizada para leitura.
+  O clube armazena uma lista com os dados básicos de seus rivais.
+  """
+  print("\nExecutando: Cenário 4 (Array Embutido de Rivais)")
 
-  #1 Insere a partida com a lista de documentos
-  db.partida.insert_one({
-    "descricao": "Jogo Decisivo",
-    "equipe_arbitragem": [
-      {"cpf": "111", "nome": "Raphael Claus", "funcao": "Principal"},
-      {"cpf": "222", "nome": "Wilton Pereira Sampaio", "funcao": "Assistente"},
-      {"cpf": "333", "nome": "Anderson Daronco", "funcao": "VAR"}
+  #Inserção do clube com a lista de rivais embutida
+  db.clube.insert_one({
+    "_id": "SPT",
+    "nome": "Sport Club do Recife",
+    "rivais": [
+      {"id_clube": "NAU", "nome": "Clube Náutico Capibaribe"},
+      {"id_clube": "STC", "nome": "Santa Cruz Futebol Clube"}
     ]
   })
 
-  #2 Consulta direta
-  partida = db.partida.find_one({"descricao": "Jogo Decisivo"})
+  #Consulta: Quais os nomes dos rivais do Sport?
+  sport = db.clube.find_one({"_id": "SPT"})
 
-  pp.pprint(partida['equipe_arbitragem'])
+  pp.pprint(sport['rivais'])
+
 
 def main():
-  """Função principal com o menu de interação."""
+  """
+  Função principal com o menu de interação.
+  """
   client = pymongo.MongoClient("mongodb://localhost:27017/")
   db = client['futebol']
 
   cenarios = {
-    1: cenario_1_referencia,
-    2: cenario_2_embutido,
+    1: cenario_1_referencia_unica,
+    2: cenario_2_embutido_unico,
     3: cenario_3_array_referencias,
     4: cenario_4_array_embutido
   }
 
   while True:
     print("\n----------------------------------")
-    print("1: Cenário de Referência (1-1)")
-    print("2: Cenário Embutido (1-1)")
-    print("3: Cenário com Array de Referências (1-N)")
-    print("4: Cenário com Array Embutido (1-N)")
+    print("Relacionamento Rival (Clube-Clube)")
+    print("1: Cenário de Referência Única (Principal Rival)")
+    print("2: Cenário Embutido Único (Principal Rival)")
+    print("3: Cenário com Array de Referências (Rivais)")
+    print("4: Cenário com Array Embutido (Rivais)")
     print("0: Sair")
 
     try:
-      escolha = int(input("Escolha o cenário: "))
+      escolha = int(input("Escolha o cenário a executar: "))
+
       if escolha == 0:
-        print("Saindo...")
+        print("Encerrando...")
         break
 
       if escolha in cenarios:
-        limpa_banco(db)
+        limpar_colecoes(db)
         cenarios[escolha](db)
       else:
-        print("Opção inválida.")
-        
+        print("Opção inválida. Tente novamente.")
+
     except ValueError:
-      print("Por favor, digite um número.")
+      print("Entrada inválida. Por favor, digite um número.")
     except Exception as e:
-      print(f"Ocorreu um erro: {e}")
+      print(f"Ocorreu um erro inesperado: {e}")
 
   client.close()
 
