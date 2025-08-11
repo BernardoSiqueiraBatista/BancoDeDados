@@ -6,8 +6,7 @@ db = cliente['futebol']
 
 
 
-# Query : Nome dos Jogadores que jogam no clube "..."
-
+# Query : Clube do jogador de nome "X"
 
 
 # Documento referenciando apenas um documento
@@ -23,19 +22,19 @@ def scenario_1():
     dados_jogador2 = {"_id": 2, "nome": "Magrão", "posicao": "Goleiro", "id_clube": 1}
     dados_jogador3 = {"_id": 3, "nome": "Carlinhos Bala", "posicao": "Atacante", "id_clube": 1}
     dados_jogador4 = {"_id": 4, "nome": "Kiesa", "posicao": "Atacante", "id_clube": 2}
-    dados_jogador5 = {"_id": 5, "nome": "Tiago Garlhardo", "posicao": "Atacante", "id_clube": 3}
+    dados_jogador5 = {"_id": 5, "nome": "Tiago Galhardo", "posicao": "Atacante", "id_clube": 3}
     
     db.jogador.insert_many([dados_jogador1, dados_jogador2, dados_jogador3, dados_jogador4, dados_jogador5])
 
 def query_scenario_1():
-    nome = input("Nome do Clube: ").strip()
-    id_clube = db.clube.find_one({"nome": nome})
+    nome_jogador = input("Nome do Jogador: ").strip()
+    jogador = db.jogador.find_one({"nome": nome_jogador})
     
-    if(id_clube):
-        jogadores = db.jogador.find({"id_clube": id_clube["_id"]})
-
-        for i in jogadores:
-            print(i)
+    if jogador:
+        clube = db.clube.find_one({"_id": jogador["id_clube"]})
+    
+        if clube:
+            print(clube)
 
 
 
@@ -95,12 +94,12 @@ def scenario_2():
     db.jogador.insert_many([dados_jogador1, dados_jogador2, dados_jogador3, dados_jogador4, dados_jogador5])
 
 def query_scenario_2():
-    nome = input("Nome do Clube: ").strip()
-    query = {"clube.nome": nome}
-    jogadores = db.jogador.find(query)
-
-    for i in jogadores:
-        print(i)
+    nome_jogador = input("Nome do Jogador: ").strip()
+    
+    jogador = db.jogador.find_one({"nome": nome_jogador})
+    
+    if jogador:
+        print(jogador["clube"])
 
 
 
@@ -137,15 +136,15 @@ def scenario_3():
     db.clube.insert_many([dadosClube1, dadosClube2, dadosClube3])
 
 def query_scenario_3():
-    nome = input("Nome do Clube: ").strip()
-    query = {"nome": nome}
-    clube = db.clube.find_one(query)
+    nome_jogador = input("Nome do Jogador: ").strip()
 
-    if clube:
-        jogadores = db.jogador.find({"_id": {"$in" : clube["id_jogadores"]}})
-        
-        for i in jogadores:
-            print(i)
+    jogador = db.jogador.find_one({"nome": nome_jogador})
+
+    if jogador:
+        clube = db.clube.find_one({"id_jogadores" : jogador["_id"]})
+
+        if clube:
+            print(clube)
 
 
 
@@ -181,12 +180,12 @@ def scenario_4():
     db.clube.insert_many([dados_clube1, dados_clube2, dados_clube3])
 
 def query_scenario_4():
-    nome = input("Nome do Clube: ").strip()
-    clube = db.clube.find_one({"nome": nome})
+    nome_jogador = input("Nome do Jogador: ").strip()
+
+    clube = db.clube.find_one({"jogadores.nome": nome_jogador})
 
     if clube:
-        for i in clube["jogadores"]:
-            print(i)
+        print(clube)
 
 
 
